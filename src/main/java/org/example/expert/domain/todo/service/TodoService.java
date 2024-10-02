@@ -1,6 +1,11 @@
 package org.example.expert.domain.todo.service;
 
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.example.expert.client.WeatherClient;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
@@ -14,8 +19,15 @@ import org.example.expert.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -48,10 +60,10 @@ public class TodoService {
         );
     }
 
-    public Page<TodoResponse> getTodos(int page, int size) {
+    public Page<TodoResponse> getTodos(int page, int size, String weather, String starDate, String endDate) {
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        Page<Todo> todos = todoRepository.findAll(makeDynamicQuery(weather, starDate, endDate), pageable);
 
         return todos.map(todo -> new TodoResponse(
                 todo.getId(),
@@ -79,5 +91,39 @@ public class TodoService {
                 todo.getCreatedAt(),
                 todo.getModifiedAt()
         );
+    }
+
+    public Specification<Todo> makeDynamicQuery(String weather, String starDate, String endDate) {
+        return ((root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (Strings.isNotBlank(weather)) {
+                predicates.add(builder.equal(root.get("weather"), weather));
+            }
+
+            if (Strings.isNotBlank(starDate) && Strings.isNotBlank(endDate)) {
+                predicates.add(builder.between(root.get("createdAt"), strToDateFormat(starDate), strToDateFormat(endDate)));
+            } else {
+                if (Strings.isNotBlank(starDate)) {
+                    predicates.add(builder.greaterThan(root.get("createdAt"), strToDateFormat(starDate)));
+                }
+                if (Strings.isNotBlank(endDate)) {
+                    predicates.add(builder.lessThan(root.get("createdAt"), strToDateFormat(endDate)));
+                }
+            }
+
+            root.fetch("user", JoinType.LEFT);
+            query.orderBy(builder.desc(root.get("modifiedAt")));
+
+            return builder.and(predicates.toArray(new Predicate[0]));
+        });
+    }
+
+    private Date strToDateFormat(String date) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            return sdf.parse(date);
+        } catch (ParseException e) {
+            throw new InvalidRequestException("Invalid date format");
+        }
     }
 }
