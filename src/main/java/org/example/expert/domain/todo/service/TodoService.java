@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.expert.client.WeatherClient;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
+import org.example.expert.domain.todo.dto.request.TodoGetRequest;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
@@ -48,10 +49,8 @@ public class TodoService {
         );
     }
 
-    public Page<TodoResponse> getTodos(int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+    public Page<TodoResponse> getTodos(TodoGetRequest request) {
+        Page<Todo> todos = requestToTodoPage(request);
 
         return todos.map(todo -> new TodoResponse(
                 todo.getId(),
@@ -62,6 +61,60 @@ public class TodoService {
                 todo.getCreatedAt(),
                 todo.getModifiedAt()
         ));
+    }
+
+    /**
+     * 분기 별 Page 반환
+     * 분기 :
+     * 1)날씨,기간 모두 없는 경우
+     * 2)날씨만 있는 경우
+     * 3)기간만 있는 경우
+     * 4)날씨, 기간 모두 있는 경우
+     *
+     * @param request 페이지네이션과 분기 조건을 포함하는 RequestDto
+     *                int page : 페이지 번호, 기본값 1
+     *                int size : 페이지 크기, 기본값 10
+     *                String weather : 문자열 날씨
+     *                Date firstDate : 기간 시작일
+     *                Date lastDate : 기간 마지막일
+     * @return Page 반환
+     */
+    private Page<Todo> requestToTodoPage(TodoGetRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage() - 1,request.getSize());
+
+        //날씨, 기간 모두 없는 경우
+        if(request.getWeather() == null && !validatePeriod(request)) {
+            return todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        }
+
+        //날씨만 있는 경우
+        else if(request.getWeather() != null && !validatePeriod(request)) {
+            return todoRepository.findAllByWeatherOrderByModifiedAtDesc(pageable,request.getWeather());
+        }
+
+        //기간만 있는 경우
+        else if(request.getWeather() == null && validatePeriod(request)) {
+            return todoRepository.findAllByPeriodOrderByModifiedAtDesc(pageable,request.getFirstDate(),request.getLastDate());
+        }
+
+        //날씨, 기간 모두 있는 경우
+        else {
+            return todoRepository.findAllByPeriodAndWeatherOrderByModifiedAtDesc(pageable,request.getWeather(),request.getFirstDate(),request.getLastDate());
+        }
+    }
+
+    //기간이 입력된 경우 시작과 끝 둘 중 하나가 없는 경우, 끝 날짜가 시작 날짜보다 이전인 경우 예외 발생
+    private boolean validatePeriod(TodoGetRequest request) {
+        if(request.getFirstDate()!= null && request.getLastDate() == null) {
+            throw new IllegalArgumentException("기간의 끝이 입력되지 않았습니다.");
+        }
+        if (request.getFirstDate() == null && request.getLastDate() != null) {
+            throw new IllegalArgumentException("기간의 시작이 입력되지 않았습니다.");
+        }
+        if (request.getLastDate().before(request.getFirstDate())) {
+            throw new IllegalArgumentException("끝 날짜는 시작 날짜 이전일 수 없습니다.");
+        }
+        return request.getFirstDate() != null && request.getLastDate() != null;
     }
 
     public TodoResponse getTodo(long todoId) {
