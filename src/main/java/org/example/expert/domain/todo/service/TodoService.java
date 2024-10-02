@@ -10,6 +10,8 @@ import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
+import org.example.expert.domain.todo.repository.TodoRepositoryCustom;
+import org.example.expert.domain.todo.repository.impl.TodoRepositoryCustomImpl;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 import org.springframework.data.domain.Page;
@@ -24,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final TodoRepositoryCustom todoRepositoryCustom;
     private final WeatherClient weatherClient;
+    private final TodoRepositoryCustomImpl todoRepositoryCustomImpl;
 
     @Transactional
     public TodoSaveResponse saveTodo(AuthUser authUser, TodoSaveRequest todoSaveRequest) {
@@ -106,19 +110,19 @@ public class TodoService {
     //기간이 입력된 경우 시작과 끝 둘 중 하나가 없는 경우, 끝 날짜가 시작 날짜보다 이전인 경우 예외 발생
     private boolean validatePeriod(TodoGetRequest request) {
         if(request.getFirstDate()!= null && request.getLastDate() == null) {
-            throw new IllegalArgumentException("기간의 끝이 입력되지 않았습니다.");
+            throw new InvalidRequestException("기간의 끝이 입력되지 않았습니다.");
         }
         if (request.getFirstDate() == null && request.getLastDate() != null) {
-            throw new IllegalArgumentException("기간의 시작이 입력되지 않았습니다.");
+            throw new InvalidRequestException("기간의 시작이 입력되지 않았습니다.");
         }
         if (request.getLastDate().before(request.getFirstDate())) {
-            throw new IllegalArgumentException("끝 날짜는 시작 날짜 이전일 수 없습니다.");
+            throw new InvalidRequestException("끝 날짜는 시작 날짜 이전일 수 없습니다.");
         }
         return request.getFirstDate() != null && request.getLastDate() != null;
     }
 
     public TodoResponse getTodo(long todoId) {
-        Todo todo = todoRepository.findByIdWithUser(todoId)
+        Todo todo = todoRepositoryCustom.findByIdWithUser(todoId)
                 .orElseThrow(() -> new InvalidRequestException("Todo not found"));
 
         User user = todo.getUser();
