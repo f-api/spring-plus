@@ -2,8 +2,8 @@ package org.example.expert.domain.todo.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.expert.client.WeatherClient;
-import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
+import org.example.expert.domain.security.SecurityUtil;
 import org.example.expert.domain.todo.dto.request.TodoGetRequest;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
@@ -20,19 +20,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TodoService {
 
+    private final SecurityUtil securityUtil;
     private final TodoRepository todoRepository;
     private final TodoRepositoryCustom todoRepositoryCustom;
     private final WeatherClient weatherClient;
     private final TodoRepositoryCustomImpl todoRepositoryCustomImpl;
 
     @Transactional
-    public TodoSaveResponse saveTodo(AuthUser authUser, TodoSaveRequest todoSaveRequest) {
-        User user = User.fromAuthUser(authUser);
+    public TodoSaveResponse saveTodo(TodoSaveRequest todoSaveRequest) {
+        User user = securityUtil.getCurrentUser();
 
         String weather = weatherClient.getTodayWeather();
 
@@ -84,41 +87,44 @@ public class TodoService {
      * @return Page 반환
      */
     private Page<Todo> requestToTodoPage(TodoGetRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage() - 1,request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize());
 
         //날씨, 기간 모두 없는 경우
-        if(request.getWeather() == null && !validatePeriod(request)) {
+        if (request.getWeather() == null && !validatePeriod(request)) {
             return todoRepository.findAllByOrderByModifiedAtDesc(pageable);
         }
 
         //날씨만 있는 경우
-        else if(request.getWeather() != null && !validatePeriod(request)) {
-            return todoRepository.findAllByWeatherOrderByModifiedAtDesc(pageable,request.getWeather());
+        else if (request.getWeather() != null && !validatePeriod(request)) {
+            return todoRepository.findAllByWeatherOrderByModifiedAtDesc(pageable, request.getWeather());
         }
 
         //기간만 있는 경우
-        else if(request.getWeather() == null && validatePeriod(request)) {
-            return todoRepository.findAllByPeriodOrderByModifiedAtDesc(pageable,request.getFirstDate(),request.getLastDate());
+        else if (request.getWeather() == null && validatePeriod(request)) {
+            return todoRepository.findAllByPeriodOrderByModifiedAtDesc(pageable, request.getFirstDate(), request.getLastDate());
         }
 
         //날씨, 기간 모두 있는 경우
         else {
-            return todoRepository.findAllByPeriodAndWeatherOrderByModifiedAtDesc(pageable,request.getWeather(),request.getFirstDate(),request.getLastDate());
+            return todoRepository.findAllByPeriodAndWeatherOrderByModifiedAtDesc(pageable, request.getWeather(), request.getFirstDate(), request.getLastDate());
         }
     }
 
     //기간이 입력된 경우 시작과 끝 둘 중 하나가 없는 경우, 끝 날짜가 시작 날짜보다 이전인 경우 예외 발생
     private boolean validatePeriod(TodoGetRequest request) {
-        if(request.getFirstDate()!= null && request.getLastDate() == null) {
+        Date firstDate = request.getFirstDate();
+        Date lastDate = request.getLastDate();
+
+        if (firstDate != null && lastDate == null) {
             throw new InvalidRequestException("기간의 끝이 입력되지 않았습니다.");
         }
-        if (request.getFirstDate() == null && request.getLastDate() != null) {
+        if (firstDate == null && lastDate != null) {
             throw new InvalidRequestException("기간의 시작이 입력되지 않았습니다.");
         }
-        if (request.getLastDate().before(request.getFirstDate())) {
+        if (firstDate != null && lastDate != null && lastDate.before(firstDate)) {
             throw new InvalidRequestException("끝 날짜는 시작 날짜 이전일 수 없습니다.");
         }
-        return request.getFirstDate() != null && request.getLastDate() != null;
+        return firstDate != null && lastDate != null;
     }
 
     public TodoResponse getTodo(long todoId) {
