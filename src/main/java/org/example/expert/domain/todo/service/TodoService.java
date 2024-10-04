@@ -1,9 +1,8 @@
 package org.example.expert.domain.todo.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.example.expert.client.WeatherClient;
@@ -12,6 +11,7 @@ import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
+import org.example.expert.domain.todo.entity.QTodo;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.dto.response.UserResponse;
@@ -36,6 +36,8 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
     private final WeatherClient weatherClient;
+
+    private final JPAQueryFactory queryFactory;
 
     @Transactional
     public TodoSaveResponse saveTodo(AuthUser authUser, TodoSaveRequest todoSaveRequest) {
@@ -77,7 +79,7 @@ public class TodoService {
     }
 
     public TodoResponse getTodo(long todoId) {
-        Todo todo = todoRepository.findByIdWithUser(todoId)
+        Todo todo = todoRepository.getTodo(todoId)
                 .orElseThrow(() -> new InvalidRequestException("Todo not found"));
 
         User user = todo.getUser();

@@ -2,6 +2,7 @@ package org.example.expert.domain.todo.service;
 
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
+import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
 import org.example.expert.domain.user.entity.User;
 import org.example.expert.domain.user.enums.UserRole;
@@ -37,5 +38,24 @@ class TodoServiceTest {
 
         // then
         assertEquals(todoSaveRequest.getContents(), todoSaveResponse.getContents());
+    }
+
+    @Test
+    @DisplayName("todo 조회에 성공한다.")
+    void getTodo_success() {
+        // given
+        User user = new User("email", "password", "nickname", UserRole.USER);
+        User savedUser = userRepository.save(user);
+
+        AuthUser authUser = new AuthUser(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname(), savedUser.getUserRole());
+
+        TodoSaveRequest todoSaveRequest = new TodoSaveRequest("title", "contents");
+        TodoSaveResponse todoSaveResponse = todoService.saveTodo(authUser, todoSaveRequest);
+
+        // when
+        TodoResponse todoResponse = todoService.getTodo(todoSaveResponse.getId());
+
+        // then
+        assertEquals("email", todoResponse.getUser().getEmail());
     }
 }
