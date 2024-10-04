@@ -11,7 +11,6 @@ import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
-import org.example.expert.domain.todo.entity.QTodo;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.dto.response.UserResponse;
@@ -98,6 +97,8 @@ public class TodoService {
     public Specification<Todo> makeDynamicQuery(String weather, String starDate, String endDate) {
         return ((root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
+            if (Strings.isBlank(weather) && Strings.isBlank(starDate) && Strings.isBlank(endDate)) return null;
+
             if (Strings.isNotBlank(weather)) {
                 predicates.add(builder.equal(root.get("weather"), weather));
             }

@@ -26,7 +26,7 @@ class TodoServiceTest {
     @DisplayName("todo 저장에 성공한다.")
     void saveTodo_success() {
         // given
-        User user = new User("email", "password", "nickname", UserRole.USER);
+        User user = new User("email", "password", "nickname", UserRole.ROLE_USER);
         User savedUser = userRepository.save(user);
 
         AuthUser authUser = new AuthUser(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname(), savedUser.getUserRole());
@@ -44,7 +44,7 @@ class TodoServiceTest {
     @DisplayName("todo 조회에 성공한다.")
     void getTodo_success() {
         // given
-        User user = new User("email", "password", "nickname", UserRole.USER);
+        User user = new User("email", "password", "nickname", UserRole.ROLE_USER);
         User savedUser = userRepository.save(user);
 
         AuthUser authUser = new AuthUser(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname(), savedUser.getUserRole());
