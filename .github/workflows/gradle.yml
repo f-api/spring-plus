@@ -25,7 +25,10 @@ jobs:
       DB_URL:  ${{ secrets.DB_URL }}
       DB_USERNAME:  ${{ secrets.DB_USERNAME }}
       DB_PASSWORD:  ${{ secrets.DB_PASSWORD }}
-      JWT_SECRET_KEY:  ${{ secrets.JWT_SECRET_KEY }}
+      JWT_SECRET_KEY:  ${{ secrets.JWT_SECRET_KEY }}  
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
     - uses: actions/checkout@v4
@@ -58,6 +61,24 @@ jobs:
     - name: Push the Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/spring-plus:latest
 
+    #깃허브 액션 IP 가져오기
+    - name:  Get Github action IP
+      id:  ip
+      uses:  haythem/public-ip@v1.3
+
+    #AWS credentials
+    - name:  Configure AWS credentials
+      uses:  aws-actions/configure-aws-credentials@v4.0.2
+      with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+    # 깃허브 액션 IP 보안규칙에 추가
+    - name:  Add Github Actions IP to Security group
+      run:  |
+         aws ec2 authorize-security-group-ingress --group-name ${{ secrets.AWS_SG_NAME }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
     # EC2에서 이미지 Pull, 컨테이너 실행
     - name:  Deploy to AWS EC2
       uses:  appleboy/ssh-action@v1.1.0
@@ -70,6 +91,16 @@ jobs:
           docker stop spring-plus || true
           docker rm spring-plus || true
           docker run --env-file .env -d --name spring-plus -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/spring-plus:latest
+
+     # 깃허브 액션 IP 보안규칙에서 제거
+    - name: Remove Github Actions IP from security group
+      run: |
+        aws ec2 revoke-security-group-ingress --group-name ${{ secrets.AWS_SG_NAME }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
+         
+       
+     
+     
 
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
