@@ -28,11 +28,13 @@ public class ManagerService {
     private final ManagerRepository managerRepository;
     private final UserRepository userRepository;
     private final TodoRepository todoRepository;
+    private final ManagerSignUpLogService managerSignUpLogService;
 
     @Transactional
     public ManagerSaveResponse saveManager(long todoId, ManagerSaveRequest managerSaveRequest) {
         // 일정을 만든 유저
         User user = securityUtil.getCurrentUser();
+        managerSignUpLogService.saveLog(user,todoId);
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new InvalidRequestException("Todo not found"));
 
