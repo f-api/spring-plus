@@ -1,16 +1,14 @@
 package org.example.expert.domain.todo.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.sql.Date;
-
 @Getter
 @NoArgsConstructor
-public class TodoGetRequest {
+public class TodoSearchByTitleRequestDto {
     int pageNum = 1;
     int size = 10;
-    String weather;
-    Date firstDate;
-    Date lastDate;
+    @NotBlank
+    String title;
 }

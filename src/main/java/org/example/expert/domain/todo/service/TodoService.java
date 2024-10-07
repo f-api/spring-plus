@@ -4,19 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.example.expert.client.WeatherClient;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.security.SecurityUtil;
-import org.example.expert.domain.todo.dto.request.TodoGetRequest;
-import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
+import org.example.expert.domain.todo.dto.request.*;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
+import org.example.expert.domain.todo.dto.response.TodoSearchResponseDto;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.todo.repository.TodoRepositoryCustom;
-import org.example.expert.domain.todo.repository.impl.TodoRepositoryCustomImpl;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +31,6 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final TodoRepositoryCustom todoRepositoryCustom;
     private final WeatherClient weatherClient;
-    private final TodoRepositoryCustomImpl todoRepositoryCustomImpl;
 
     @Transactional
     public TodoSaveResponse saveTodo(TodoSaveRequest todoSaveRequest) {
@@ -87,34 +86,32 @@ public class TodoService {
      * @return Page 반환
      */
     private Page<Todo> requestToTodoPage(TodoGetRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize());
+        Pageable pageable = PageRequest.of(request.getPageNum() - 1, request.getSize());
 
         //날씨, 기간 모두 없는 경우
-        if (request.getWeather() == null && !validatePeriod(request)) {
+        if (request.getWeather() == null && !validatePeriod(request.getFirstDate(),request.getLastDate())) {
             return todoRepository.findAllByOrderByModifiedAtDesc(pageable);
         }
 
         //날씨만 있는 경우
-        else if (request.getWeather() != null && !validatePeriod(request)) {
+        else if (request.getWeather() != null && !validatePeriod(request.getFirstDate(),request.getLastDate())) {
             return todoRepository.findAllByWeatherOrderByModifiedAtDesc(pageable, request.getWeather());
         }
 
         //기간만 있는 경우
-        else if (request.getWeather() == null && validatePeriod(request)) {
+        else if (request.getWeather() == null && validatePeriod(request.getFirstDate(),request.getLastDate())) {
             return todoRepository.findAllByPeriodOrderByModifiedAtDesc(pageable, request.getFirstDate(), request.getLastDate());
         }
 
         //날씨, 기간 모두 있는 경우
         else {
+            validatePeriod(request.getFirstDate(),request.getLastDate());
             return todoRepository.findAllByPeriodAndWeatherOrderByModifiedAtDesc(pageable, request.getWeather(), request.getFirstDate(), request.getLastDate());
         }
     }
 
     //기간이 입력된 경우 시작과 끝 둘 중 하나가 없는 경우, 끝 날짜가 시작 날짜보다 이전인 경우 예외 발생
-    private boolean validatePeriod(TodoGetRequest request) {
-        Date firstDate = request.getFirstDate();
-        Date lastDate = request.getLastDate();
-
+    private boolean validatePeriod(Date firstDate, Date lastDate) {
         if (firstDate != null && lastDate == null) {
             throw new InvalidRequestException("기간의 끝이 입력되지 않았습니다.");
         }
@@ -143,4 +140,22 @@ public class TodoService {
                 todo.getModifiedAt()
         );
     }
+
+    //검색 관련
+    public Page<TodoSearchResponseDto> searchByTitle(TodoSearchByTitleRequestDto requestDto) {
+        Pageable pageable = PageRequest.of(requestDto.getPageNum()-1,requestDto.getSize());
+        return todoRepositoryCustom.searchByTitle(pageable,requestDto.getTitle());
+    }
+
+    public Page<TodoSearchResponseDto> searchByManagerNickname(TodoSearchByManagerNicknameRequestDto requestDto) {
+        Pageable pageable = PageRequest.of(requestDto.getPageNum()-1,requestDto.getSize());
+        return todoRepositoryCustom.searchByManagerNickname(pageable, requestDto.getNickname());
+    }
+
+    public Page<TodoSearchResponseDto> searchByCreatedPeriod(TodoSearchByCreatedPeriodDto requestDto) {
+        validatePeriod(requestDto.getFirstDate(),requestDto.getLastDate());
+        Pageable pageable = PageRequest.of(requestDto.getPageNum()-1,requestDto.getSize());
+        return todoRepositoryCustom.searchByCreatedDate(pageable,requestDto.getFirstDate(),requestDto.getLastDate());
+    }
+
 }
