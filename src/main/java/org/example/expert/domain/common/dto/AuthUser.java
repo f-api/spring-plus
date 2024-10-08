@@ -9,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 @Getter
 public class AuthUser {
 
@@ -20,12 +21,7 @@ public class AuthUser {
     public AuthUser(Long userId, String email, UserRole role, String nickname) {
         this.id = userId;
         this.email = email;
-        if(role != null) {
-            this.authorities = List.of(new SimpleGrantedAuthority(role.name()));
-        }else {
-            this.authorities = List.of();
-            log.error("user is null : {}", email);
-        }
+        this.authorities = List.of(new SimpleGrantedAuthority(role.name()));
         this.nickname = nickname;
     }
 }
