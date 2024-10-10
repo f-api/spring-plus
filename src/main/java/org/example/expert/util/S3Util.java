@@ -29,13 +29,13 @@ public class S3Util {
     public String bucket;  // S3 버킷
 
     // S3 파일 업로드
-    public String upload(MultipartFile multipartFile, String dirName) throws IOException {
+    public String upload(MultipartFile multipartFile) throws IOException {
         // MultipartFile -> File
         File convertFile = convert(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("file convert error")); // 파일을 변환할 수 없으면 에러
 
         // S3에 저장할 파일명
-        String fileName = dirName + "/" + UUID.randomUUID() + "_" + convertFile.getName();
+        String fileName = "profilePic/" + UUID.randomUUID() + "_" + convertFile.getName();
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
@@ -72,7 +72,7 @@ public class S3Util {
                     .build();
 
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                    .signatureDuration(Duration.ofMinutes(60))
+                    .signatureDuration(Duration.ofMinutes(5))
                     .getObjectRequest(objectRequest)
                     .build();
 
