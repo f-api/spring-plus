@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -19,7 +18,11 @@ public interface TodoRepository extends JpaRepository<Todo, Long>, TodoQueryRepo
             "(:endDate IS NULL OR t.modifiedAt <= :endDate) " +
             "ORDER BY t.modifiedAt DESC")
     Page<Todo> findTodosByWeatherAndModifiedDate(
-            String weather, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+            @Param("weather") String weather,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable);
+
 
     @Query("SELECT t FROM Todo t " +
             "LEFT JOIN t.user " +

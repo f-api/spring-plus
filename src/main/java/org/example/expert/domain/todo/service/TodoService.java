@@ -3,8 +3,8 @@ package org.example.expert.domain.todo.service;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.client.WeatherClient;
 import org.example.expert.domain.common.dto.AuthUser;
-import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
+import org.example.expert.domain.todo.dto.response.TodoProjectionDto;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
 import org.example.expert.domain.todo.entity.Todo;
@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Service
 @RequiredArgsConstructor
@@ -54,10 +53,15 @@ public class TodoService {
     public Page<TodoResponse> getTodos(int page, int size, String weather, LocalDate startDate, LocalDate endDate) {
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        LocalDateTime startOfDay =  startDate.atStartOfDay();
-        LocalDateTime endOfDay = endDate.atStartOfDay().plusDays(1);
+        LocalDateTime startOfDay = (startDate != null) ? startDate.atStartOfDay() : null;
+        LocalDateTime endOfDay = (endDate != null) ? endDate.atStartOfDay().plusDays(1) : null;
 
-        Page<Todo> todos = todoRepository.findTodosByWeatherAndModifiedDate(weather,startOfDay, endOfDay, pageable);
+        Page<Todo> todos = todoRepository.findTodosByWeatherAndModifiedDate(
+                weather != null ? weather : null,
+                startOfDay,
+                endOfDay,
+                pageable
+        );
 
         return todos.map(todo -> new TodoResponse(
                 todo.getId(),
@@ -69,6 +73,13 @@ public class TodoService {
                 todo.getModifiedAt()
         ));
     }
+
+    public Page<TodoProjectionDto> searchTodos(int page, int size, String keyword, LocalDate createdAt, String nickname) {
+        Pageable pageable = PageRequest.of(page-1, size);
+        return todoRepository.searchTodos(pageable, keyword, createdAt, nickname);
+
+    }
+
 
     public TodoResponse getTodo(long todoId) {
         Todo todo = todoRepository.findByIdWithUserByDsl(todoId);
@@ -85,4 +96,5 @@ public class TodoService {
                 todo.getModifiedAt()
         );
     }
+
 }
