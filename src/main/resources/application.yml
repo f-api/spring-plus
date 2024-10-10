@@ -1,0 +1,13 @@
+#S3 설정
+cloud:
+  aws:
+    s3:
+      bucket: ${BUKKIT_NAME}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region:
+      static: ${AWS_DEFAULT_REGION}
+      auto: false
+    stack:
+      auto: false
