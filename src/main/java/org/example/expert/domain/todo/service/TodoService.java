@@ -97,15 +97,4 @@ public class TodoService {
         );
     }
 
-//    public Page<TodoResponse> search(int page, int size) {
-//        Pageable pageable = PageRequest.of(page-1, size);
-//        return todoRepository.search(pageable);
-//    }
-//
-//
-//    public TodoProjectionDto getTodoByProjection(long todoId) {
-//        return todoRepository.findByIdFromProjection(todoId);
-//    }
-
-
 }

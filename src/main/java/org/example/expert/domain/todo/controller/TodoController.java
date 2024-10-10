@@ -55,22 +55,8 @@ public class TodoController {
         return ResponseEntity.ok(todoService.searchTodos(page, size, keyword, createdAt, nickname));
     }
 
-
-//    @GetMapping("/todos/search")
-//    public ResponseEntity<Page<TodoResponse>> search(
-//            @RequestParam(defaultValue = "1")  int page,
-//            @RequestParam(defaultValue = "10")  int size
-//    ) {
-//        return ResponseEntity.ok(todoService.search(page, size));
-//    }
-
     @GetMapping("/todos/{todoId}")
     public ResponseEntity<TodoResponse> getTodo(@PathVariable long todoId) {
         return ResponseEntity.ok(todoService.getTodo(todoId));
     }
-
-//    @GetMapping("/todos/{todoId}/projection")
-//    public ResponseEntity<TodoProjectionDto> getTodoByProjection(@PathVariable long todoId) {
-//        return ResponseEntity.ok(todoService.getTodoByProjection(todoId));
-//    }
 }

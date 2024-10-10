@@ -14,9 +14,5 @@ public interface TodoQueryRepository {
 
     Page<TodoProjectionDto> searchTodos(Pageable pageable, String keyword, LocalDate createdAt, String nickname);
 
-    Page<TodoResponse> search(Pageable pageable);
-
-    TodoProjectionDto findByIdFromProjection(long todoId);
-
 
 }

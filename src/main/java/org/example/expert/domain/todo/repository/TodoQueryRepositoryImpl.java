@@ -7,9 +7,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.expert.domain.todo.dto.response.TodoProjectionDto;
-import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.entity.Todo;
-import org.example.expert.domain.user.dto.response.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -102,72 +100,9 @@ public class TodoQueryRepositoryImpl implements TodoQueryRepository {
         return todo.createdAt.between(startOfDay, endOfDay);
     }
 
-
     private BooleanExpression nicknameContains(String nickname) {
         return manager.user.nickname.containsIgnoreCase(nickname);
     }
-
-
-
-
-
-
-    @Override
-    public Page<TodoResponse> search(Pageable pageable) {
-        List<Todo> todos = queryFactory
-                .select(todo)
-                .distinct()
-                .from(todo)
-                .leftJoin(todo.managers, manager).fetchJoin() // Fetch Join N+1 문제 해결
-                .leftJoin(todo.comments, comment) // Batch Size N+1 문제 해결 in Todo Entity
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch(); // 여러개 가져오기
-
-        // 디버깅을 위한 로그 출력
-        todos.forEach(t -> log.info("Fetched todo: {}", t));
-
-        Long count = queryFactory
-                .select(Wildcard.count) // select count(*)
-                .from(todo)
-                .fetchOne(); // 1개만 가져오기
-
-
-
-        List<TodoResponse> result = todos.stream()
-                .map(todo ->
-                        new TodoResponse(
-                                todo.getId(),
-                                todo.getTitle(),
-                                todo.getContents(),
-                                todo.getWeather(),
-                                new UserResponse(todo.getUser().getId(), todo.getUser().getEmail()),
-                                todo.getCreatedAt(),
-                                todo.getModifiedAt()
-                        )
-                ).toList();
-
-        return new PageImpl<>(result, pageable, count);
-    }
-
-    @Override
-    public TodoProjectionDto findByIdFromProjection(long todoId) {
-        return queryFactory
-                .select(
-                        // annotation 방법
-                        Projections.constructor(
-                                TodoProjectionDto.class,
-                                todo.title,
-                                todo.contents,
-                                todo.id.max()
-                        )
-                )
-                .from(todo)
-                .where(
-                        todoIdEq(todoId)
-                ).fetchOne();
-    }
-
 
     private BooleanExpression todoIdEq(Long todoId) {
         return todoId != null ? todo.id.eq(todoId) : null;
