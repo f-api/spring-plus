@@ -2,9 +2,9 @@ package org.example.expert.domain.todo.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.expert.domain.common.annotation.Auth;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
+import org.example.expert.domain.todo.dto.response.TodoProjectionDto;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
 import org.example.expert.domain.todo.service.TodoService;
@@ -19,6 +19,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TodoController {
 
     private final TodoService todoService;
@@ -43,8 +44,33 @@ public class TodoController {
         return ResponseEntity.ok(todoService.getTodos(page, size, weather, startDate, endDate));
     }
 
+    @GetMapping("/todos/search/projections")
+    public ResponseEntity<Page<TodoProjectionDto>> searchTodos(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate createdAt,
+            @RequestParam(required = false) String nickname
+    ) {
+        return ResponseEntity.ok(todoService.searchTodos(page, size, keyword, createdAt, nickname));
+    }
+
+
+//    @GetMapping("/todos/search")
+//    public ResponseEntity<Page<TodoResponse>> search(
+//            @RequestParam(defaultValue = "1")  int page,
+//            @RequestParam(defaultValue = "10")  int size
+//    ) {
+//        return ResponseEntity.ok(todoService.search(page, size));
+//    }
+
     @GetMapping("/todos/{todoId}")
     public ResponseEntity<TodoResponse> getTodo(@PathVariable long todoId) {
         return ResponseEntity.ok(todoService.getTodo(todoId));
     }
+
+//    @GetMapping("/todos/{todoId}/projection")
+//    public ResponseEntity<TodoProjectionDto> getTodoByProjection(@PathVariable long todoId) {
+//        return ResponseEntity.ok(todoService.getTodoByProjection(todoId));
+//    }
 }
