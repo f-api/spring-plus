@@ -1,12 +1,15 @@
 package org.example.expert.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.example.expert.config.PasswordEncoder;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.user.dto.request.UserChangePasswordRequest;
+import org.example.expert.domain.user.dto.response.UserListResponse;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 import org.example.expert.domain.user.repository.UserRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +42,14 @@ public class UserService {
         }
 
         user.changePassword(passwordEncoder.encode(userChangePasswordRequest.getNewPassword()));
+    }
+
+    @Transactional
+    @Cacheable(cacheNames="userCache", key="#nickname")
+    public UserListResponse searchUserNickname(String nickname) {
+        if (Strings.isBlank(nickname)) throw new InvalidRequestException("User nickname cannot be empty");
+
+        return UserListResponse.from(userRepository.findByNickname(nickname));
     }
 
     private static void validateNewPassword(UserChangePasswordRequest userChangePasswordRequest) {

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.common.annotation.Auth;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.user.dto.request.UserChangePasswordRequest;
+import org.example.expert.domain.user.dto.response.UserListResponse;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -23,5 +24,11 @@ public class UserController {
     @PutMapping("/users")
     public void changePassword(@Auth AuthUser authUser, @RequestBody UserChangePasswordRequest userChangePasswordRequest) {
         userService.changePassword(authUser.getId(), userChangePasswordRequest);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<UserListResponse> searchUserNickname(@RequestParam String nickname) {
+        UserListResponse userListResponse = userService.searchUserNickname(nickname);
+        return ResponseEntity.ok(userListResponse);
     }
 }
