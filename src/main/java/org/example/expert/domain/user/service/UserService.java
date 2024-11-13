@@ -20,7 +20,7 @@ public class UserService {
 
     public UserResponse getUser(long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new InvalidRequestException("User not found"));
-        return new UserResponse(user.getId(), user.getEmail());
+        return new UserResponse(user.getId(), user.getEmail(), user.getNickname());
     }
 
     @Transactional
@@ -48,4 +48,16 @@ public class UserService {
             throw new InvalidRequestException("새 비밀번호는 8자 이상이어야 하고, 숫자와 대문자를 포함해야 합니다.");
         }
     }
+
+//    @Transactional
+//    public void updateNickname(long userId, String newNickname) {
+//        if (newNickname == null || newNickname.trim().isEmpty()) {
+//            throw new InvalidRequestException("Nickname cannot be empty.");
+//        }
+//
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new InvalidRequestException("User not found"));
+//
+//        user.updateNickname(newNickname);
+//    }
 }
