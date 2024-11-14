@@ -34,6 +34,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    //Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
     // bcrypt
     implementation 'at.favre.lib:bcrypt:0.10.2'
 
