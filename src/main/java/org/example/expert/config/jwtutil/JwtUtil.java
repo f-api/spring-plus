@@ -1,10 +1,9 @@
-package org.example.expert.config;
+package org.example.expert.config.jwtutil;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.expert.domain.common.exception.ServerException;
 import org.example.expert.domain.user.enums.UserRole;
@@ -34,7 +33,7 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    public String createToken(Long userId, String email, UserRole userRole) {
+    public String createToken(Long userId, String email, UserRole userRole, String nickname) {
         Date date = new Date();
 
         return BEARER_PREFIX +
@@ -42,6 +41,7 @@ public class JwtUtil {
                         .setSubject(String.valueOf(userId))
                         .claim("email", email)
                         .claim("userRole", userRole)
+                        .claim("nickname", nickname)
                         .setExpiration(new Date(date.getTime() + TOKEN_TIME))
                         .setIssuedAt(date) // 발급일
                         .signWith(key, signatureAlgorithm) // 암호화 알고리즘
@@ -61,5 +61,31 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        }
+        catch (ExpiredJwtException e) {
+            log.error("Expired JWT token.", e);
+        } catch (MalformedJwtException | UnsupportedJwtException | SecurityException e) {
+            log.error("Invalid JWT token.", e);
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims string is empty.", e);
+        } catch (Exception e) {
+            log.error("Internal error during JWT processing.", e);
+        }
+        return false;
+    }
+
+    public String resolveToken(HttpServletRequest request) {
+
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // "Bearer " 제거 후 토큰 반환
+        }
+        return null;
     }
 }
