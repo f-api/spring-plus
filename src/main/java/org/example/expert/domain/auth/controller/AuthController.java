@@ -26,4 +26,5 @@ public class AuthController {
     public SigninResponse signin(@Valid @RequestBody SigninRequest signinRequest) {
         return authService.signin(signinRequest);
     }
+
 }
