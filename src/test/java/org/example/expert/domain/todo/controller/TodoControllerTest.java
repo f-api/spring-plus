@@ -72,5 +72,6 @@ class TodoControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value(TODO_NOT_FOUND.getCode()))
             .andExpect(jsonPath("$.message").value(TODO_NOT_FOUND.getMessage()));
+        // 언제 고쳤더라. 해결이 되어있네
     }
 }
