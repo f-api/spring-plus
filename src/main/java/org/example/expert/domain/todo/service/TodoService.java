@@ -17,6 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -47,10 +50,20 @@ public class TodoService {
         );
     }
 
-    public Page<TodoResponse> getTodos(int page, int size) {
+    public Page<TodoResponse> getTodos(String weather, LocalDate startDate, LocalDate endDate, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
+        // weather 빈 문자열 처리
+        if (weather != null && weather.isBlank()) {
+            weather = null;
+        }
 
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        // 수정일 컬럼에는 데이터가 2025-01-16 11:53:08.753483 이러한 형식으로 저장되어 있으므로
+        // LocalDate -> LocalDateTime 으로 변환 (하루의 시작과 끝)
+        LocalDateTime startOfDay = (startDate != null)? startDate.atStartOfDay() : null;
+        LocalDateTime endOfDay = (endDate != null)? endDate.atTime(23,59,59,999999) : null;
+
+
+        Page<Todo> todos = todoRepository.findTodos(weather, startOfDay, endOfDay, pageable);
 
         return todos.map(todo -> new TodoResponse(
                 todo.getId(),
