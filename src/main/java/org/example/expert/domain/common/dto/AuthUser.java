@@ -1,18 +1,15 @@
 package org.example.expert.domain.common.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.example.expert.domain.user.entity.UserRole;
 
 @Getter
+@AllArgsConstructor
 public class AuthUser {
 
     private final Long id;
     private final String email;
     private final UserRole userRole;
-
-    public AuthUser(Long id, String email, UserRole userRole) {
-        this.id = id;
-        this.email = email;
-        this.userRole = userRole;
-    }
+    private final String nickname;
 }
