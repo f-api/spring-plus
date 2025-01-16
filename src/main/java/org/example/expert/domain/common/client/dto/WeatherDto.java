@@ -1,4 +1,4 @@
-package org.example.expert.client.dto;
+package org.example.expert.domain.common.client.dto;
 
 import lombok.Getter;
 

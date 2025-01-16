@@ -1,4 +1,4 @@
-package org.example.expert.config;
+package org.example.expert.domain.common.util;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;

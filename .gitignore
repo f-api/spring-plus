@@ -38,3 +38,4 @@ out/
 
 ### properties ###
 *.properties
+application-env.yml

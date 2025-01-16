@@ -1,9 +1,13 @@
 package org.example.expert.domain.user.service;
 
+import static org.example.expert.domain.common.exception.ExceptionType.PASSWORD_NOT_MATCH;
+import static org.example.expert.domain.common.exception.ExceptionType.PASSWORD_SAME;
+import static org.example.expert.domain.common.exception.ExceptionType.USER_NOT_FOUND;
+
 import lombok.RequiredArgsConstructor;
-import org.example.expert.config.PasswordEncoder;
-import org.example.expert.domain.common.exception.InvalidRequestException;
-import org.example.expert.domain.user.dto.request.UserChangePasswordRequest;
+import org.example.expert.domain.common.exception.CustomException;
+import org.example.expert.domain.common.util.PasswordEncoder;
+import org.example.expert.domain.user.dto.request.UserPasswordChangeRequest;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 import org.example.expert.domain.user.repository.UserRepository;
@@ -19,33 +23,26 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserResponse getUser(long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidRequestException("User not found"));
-        return new UserResponse(user.getId(), user.getEmail());
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        return UserResponse.toDto(user);
     }
 
     @Transactional
-    public void changePassword(long userId, UserChangePasswordRequest userChangePasswordRequest) {
-        validateNewPassword(userChangePasswordRequest);
-
+    public void changePassword(long userId, UserPasswordChangeRequest userPasswordChangeRequest) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidRequestException("User not found"));
+            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        if (passwordEncoder.matches(userChangePasswordRequest.getNewPassword(), user.getPassword())) {
-            throw new InvalidRequestException("새 비밀번호는 기존 비밀번호와 같을 수 없습니다.");
+        if (passwordEncoder.matches(userPasswordChangeRequest.getNewPassword(),
+            user.getPassword())) {
+            throw new CustomException(PASSWORD_SAME);
         }
 
-        if (!passwordEncoder.matches(userChangePasswordRequest.getOldPassword(), user.getPassword())) {
-            throw new InvalidRequestException("잘못된 비밀번호입니다.");
+        if (!passwordEncoder.matches(userPasswordChangeRequest.getOldPassword(),
+            user.getPassword())) {
+            throw new CustomException(PASSWORD_NOT_MATCH);
         }
 
-        user.changePassword(passwordEncoder.encode(userChangePasswordRequest.getNewPassword()));
-    }
-
-    private static void validateNewPassword(UserChangePasswordRequest userChangePasswordRequest) {
-        if (userChangePasswordRequest.getNewPassword().length() < 8 ||
-                !userChangePasswordRequest.getNewPassword().matches(".*\\d.*") ||
-                !userChangePasswordRequest.getNewPassword().matches(".*[A-Z].*")) {
-            throw new InvalidRequestException("새 비밀번호는 8자 이상이어야 하고, 숫자와 대문자를 포함해야 합니다.");
-        }
+        user.changePassword(passwordEncoder.encode(userPasswordChangeRequest.getNewPassword()));
     }
 }

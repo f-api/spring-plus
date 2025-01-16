@@ -1,25 +1,25 @@
 package org.example.expert.domain.todo.controller;
 
-import org.example.expert.domain.common.dto.AuthUser;
-import org.example.expert.domain.common.exception.InvalidRequestException;
-import org.example.expert.domain.todo.dto.response.TodoResponse;
-import org.example.expert.domain.todo.service.TodoService;
-import org.example.expert.domain.user.dto.response.UserResponse;
-import org.example.expert.domain.user.entity.User;
-import org.example.expert.domain.user.enums.UserRole;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-
+import static org.example.expert.domain.common.exception.ExceptionType.TODO_NOT_FOUND;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDateTime;
+import org.example.expert.domain.common.dto.AuthUser;
+import org.example.expert.domain.common.exception.CustomException;
+import org.example.expert.domain.todo.dto.response.TodoResponse;
+import org.example.expert.domain.todo.service.TodoService;
+import org.example.expert.domain.user.dto.response.UserResponse;
+import org.example.expert.domain.user.entity.User;
+import org.example.expert.domain.user.entity.UserRole;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(TodoController.class)
 class TodoControllerTest {
@@ -39,23 +39,23 @@ class TodoControllerTest {
         User user = User.fromAuthUser(authUser);
         UserResponse userResponse = new UserResponse(user.getId(), user.getEmail());
         TodoResponse response = new TodoResponse(
-                todoId,
-                title,
-                "contents",
-                "Sunny",
-                userResponse,
-                LocalDateTime.now(),
-                LocalDateTime.now()
+            todoId,
+            title,
+            "contents",
+            "Sunny",
+            userResponse,
+            LocalDateTime.now(),
+            LocalDateTime.now()
         );
+        given(todoService.getTodo(todoId)).willReturn(response);
 
         // when
-        when(todoService.getTodo(todoId)).thenReturn(response);
 
         // then
         mockMvc.perform(get("/todos/{todoId}", todoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(todoId))
-                .andExpect(jsonPath("$.title").value(title));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(todoId))
+            .andExpect(jsonPath("$.title").value(title));
     }
 
     @Test
@@ -65,13 +65,12 @@ class TodoControllerTest {
 
         // when
         when(todoService.getTodo(todoId))
-                .thenThrow(new InvalidRequestException("Todo not found"));
+            .thenThrow(new CustomException(TODO_NOT_FOUND));
 
         // then
         mockMvc.perform(get("/todos/{todoId}", todoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
-                .andExpect(jsonPath("$.code").value(HttpStatus.OK.value()))
-                .andExpect(jsonPath("$.message").value("Todo not found"));
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value(TODO_NOT_FOUND.getCode()))
+            .andExpect(jsonPath("$.message").value(TODO_NOT_FOUND.getMessage()));
     }
 }
