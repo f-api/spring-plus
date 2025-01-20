@@ -17,4 +17,6 @@ public class SignupRequest {
     private String password;
     @NotBlank
     private String userRole;
+    @NotBlank
+    private String nickname; // Lv1-2: 회원가입 정보에 nickname 추가
 }
