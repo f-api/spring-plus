@@ -52,8 +52,8 @@ class TodoControllerTest {
         when(todoService.getTodo(todoId)).thenReturn(response);
 
         // then
-        mockMvc.perform(get("/todos/{todoId}", todoId))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/todos/{todoId}", todoId)) //엔드포인트에 Get 요청을 보냄
+                .andExpect(status().isOk()) // 요청의 Http 상태가 200 인지 검증
                 .andExpect(jsonPath("$.id").value(todoId))
                 .andExpect(jsonPath("$.title").value(title));
     }
@@ -68,10 +68,11 @@ class TodoControllerTest {
                 .thenThrow(new InvalidRequestException("Todo not found"));
 
         // then
+        // Lv1-4 Http 응답 값 수정
         mockMvc.perform(get("/todos/{todoId}", todoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
-                .andExpect(jsonPath("$.code").value(HttpStatus.OK.value()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
                 .andExpect(jsonPath("$.message").value("Todo not found"));
     }
 }
