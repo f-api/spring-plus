@@ -12,7 +12,7 @@ public enum UserRole {
     ADMIN("ROLE_ADMIN"),
     USER("ROLE_USER");
 
-    private final String role;
+    private final String role; //스프링 시큐리티가 제공하는 User에 role 전달 (getRole)
 
     public static UserRole of(String role) {
         return Arrays.stream(UserRole.values())
