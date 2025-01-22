@@ -71,7 +71,8 @@ public class JwtFilter implements Filter {
 //            httpRequest.setAttribute("email", claims.get("email"));
 //            httpRequest.setAttribute("userRole", claims.get("userRole"));
 //            httpRequest.setAttribute("nickname", claims.get("nickname"));
-            User user = new User(email, "", List.of(userRole::getRole)); // 스프링 시큐리티가 제공하는 User
+            // 스프링 시큐리티가 제공하는 User
+            User user = new User(email, "", List.of(userRole::getRole)); // List.of(): userRole 객체의 getRole() 메서드를 참조
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(
                         user, null, user.getAuthorities()
