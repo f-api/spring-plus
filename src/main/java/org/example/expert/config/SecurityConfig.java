@@ -27,8 +27,14 @@ public class SecurityConfig {
             .addFilterBefore(jwtFilter, SecurityContextHolderAwareRequestFilter.class)
             .authorizeHttpRequests
                 (auth -> auth
-                .requestMatchers("/auth/**").permitAll() //
-                .requestMatchers("/admin/**").hasRole("ADMIN") // UserRole이 "ADMIN" 인 경우에만 접근 허용
+                .requestMatchers("/auth/**").permitAll()
+                    /**
+                     * UserRole이 "ADMIN" 인 경우에만 접근 허용
+                     * == @Secured("ROLE_ADMIN")
+                     * == @PreAuthorize("hasAnyRole('ADMIN')")
+                     */
+//                .requestMatchers("/admin/**").hasRole("ADMIN")
+
                 .anyRequest().authenticated()
                 )
             .build();
