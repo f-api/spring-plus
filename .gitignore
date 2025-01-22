@@ -38,3 +38,6 @@ out/
 
 ### properties ###
 *.properties
+
+### none ###
+*.DS_Store
