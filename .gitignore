@@ -39,5 +39,5 @@ out/
 ### properties ###
 *.properties
 
-### none ###
+### .DS_Store ###
 *.DS_Store
