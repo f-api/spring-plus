@@ -28,7 +28,7 @@ public class SecurityConfig {
             .authorizeHttpRequests
                 (auth -> auth
                 .requestMatchers("/auth/**").permitAll() //
-                .requestMatchers("/admin").hasRole("ADMIN") // UserRole이 "ADMIN" 인 경우에만 접근 허용
+                .requestMatchers("/admin/**").hasRole("ADMIN") // UserRole이 "ADMIN" 인 경우에만 접근 허용
                 .anyRequest().authenticated()
                 )
             .build();
