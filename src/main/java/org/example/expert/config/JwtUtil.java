@@ -30,7 +30,7 @@ public class JwtUtil {
 	private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
 	@PostConstruct
-	public void init() {
+	public void init() { // SecretKey 초기화
 		byte[] bytes = Base64.getDecoder().decode(secretKey);
 		key = Keys.hmacShaKeyFor(bytes);
 	}
