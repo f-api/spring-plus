@@ -38,3 +38,6 @@ out/
 
 ### properties ###
 *.properties
+
+### Mac OS ###
+.DS_Store
