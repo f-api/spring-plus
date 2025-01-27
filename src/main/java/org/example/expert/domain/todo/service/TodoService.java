@@ -63,7 +63,7 @@ public class TodoService {
     }
 
     public TodoResponse getTodo(long todoId) {
-        Todo todo = todoRepository.findById(todoId)
+        Todo todo = todoRepository.findByIdWithUser(todoId)
             .orElseThrow(() -> new CustomException(TODO_NOT_FOUND));
 
         return TodoResponse.toDto(todo);
