@@ -56,6 +56,7 @@ public class TodoQueryRepositoryImpl implements TodoQueryRepository {
 				checkStartTime(startDateTime),
 				checkEndTime(endDateTime))
 			.groupBy(todo.id)
+			.orderBy(todo.createdAt.desc())
 			.offset((todoSearchRequest.getPage() - 1) * todoSearchRequest.getSize())
 			.limit(todoSearchRequest.getSize())
 			.fetch();
