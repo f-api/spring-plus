@@ -11,6 +11,7 @@ import org.example.expert.domain.auth.dto.response.TokenResponse;
 import org.example.expert.domain.common.exception.CustomException;
 import org.example.expert.domain.common.util.JwtUtil;
 import org.example.expert.domain.common.util.PasswordEncoder;
+import org.example.expert.domain.common.util.image.ImageUtil;
 import org.example.expert.domain.user.entity.User;
 import org.example.expert.domain.user.entity.UserRole;
 import org.example.expert.domain.user.repository.UserRepository;
@@ -25,6 +26,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final ImageUtil imageUtil;
 
     @Transactional
     public TokenResponse signup(SignupRequest signupRequest) {
@@ -34,12 +36,15 @@ public class AuthService {
 
         UserRole userRole = UserRole.of(signupRequest.getUserRole());
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
+        String profileFilename = imageUtil.upload(signupRequest.getProfileImage());
+
         User savedUser = userRepository.save(new User(
             signupRequest.getEmail(),
             encodedPassword,
             userRole,
-            signupRequest.getNickname())
-        );
+            signupRequest.getNickname(),
+            profileFilename
+        ));
 
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), userRole);
 

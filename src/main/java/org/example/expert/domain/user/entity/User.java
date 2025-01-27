@@ -36,11 +36,16 @@ public class User extends Timestamped {
     @Column(name = "user_role")
     private UserRole userRole;
 
-    public User(String email, String password, UserRole userRole, String nickname) {
+    @Column(name = "image_filename")
+    private String imageFilename;
+
+    public User(String email, String password, UserRole userRole, String nickname,
+        String imageFilename) {
         this.email = email;
         this.password = password;
         this.userRole = userRole;
         this.nickname = nickname;
+        this.imageFilename = imageFilename;
     }
 
     private User(Long id, String email, UserRole userRole, String nickname) {

@@ -5,8 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignupRequest {
@@ -14,10 +17,15 @@ public class SignupRequest {
     @NotBlank
     @Email
     private String email;
+
     @NotBlank
     private String password;
+
     @NotBlank
     private String userRole;
+
     @NotBlank
     private String nickname;
+
+    private MultipartFile profileImage;
 }
