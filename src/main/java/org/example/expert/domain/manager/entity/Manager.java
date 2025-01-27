@@ -16,7 +16,7 @@ import org.example.expert.domain.user.entity.User;
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "managers")
+@Table(name = "`manager`")
 public class Manager {
 
     @Id

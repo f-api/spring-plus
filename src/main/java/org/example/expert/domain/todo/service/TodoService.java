@@ -2,6 +2,7 @@ package org.example.expert.domain.todo.service;
 
 import static org.example.expert.domain.common.exception.ExceptionType.TODO_NOT_FOUND;
 
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.common.client.WeatherClient;
 import org.example.expert.domain.common.dto.AuthUser;
@@ -42,10 +43,21 @@ public class TodoService {
         return TodoResponse.toDto(savedTodo);
     }
 
-    public Page<TodoResponse> getTodos(int page, int size) {
+    public Page<TodoResponse> getTodos(
+        int page,
+        int size,
+        LocalDate startDate,
+        LocalDate endDate,
+        String weather
+    ) {
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        Page<Todo> todos = todoRepository.findAllByConditionsOrderByModifiedAtDesc(
+            startDate != null ? startDate.atStartOfDay() : null,
+            endDate != null ? endDate.atTime(23, 59, 59) : null,
+            weather,
+            pageable
+        );
 
         return todos.map(TodoResponse::toDto);
     }
